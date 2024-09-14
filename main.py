@@ -31,7 +31,7 @@ Dilly_DB = client.PayNumber
 
 @bot.event
 async def on_ready():
-    channel = bot.get_channel(1183426803889602631)
+    channel = bot.get_channel(1284347203204415539)
     await channel.send(content="울산봇이 준비되었습니다")
     await bot.tree.sync()
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="DILLY, 울산"))
