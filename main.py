@@ -1,17 +1,13 @@
 from typing import Any
 import discord
-import os
-from discord.interactions import Interaction
 import pymongo
-import motor.motor_asyncio
 from discord.ext import commands
-from discord import DMChannel
 from discord.ui import Button, View
-from discord.ui import Select, View
-from discord.ui import Button, Select
 import asyncio
+import motor.motor_asyncio
 from roblox import Client
 from roblox import AvatarThumbnailType  # AvatarThumbnailType을 임포트
+import os
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -40,16 +36,6 @@ async def on_ready():
 
     # MongoDB Change Stream 설정
     asyncio.create_task(monitor_db_changes())
-
-@bot.event
-async def on_member_join(member):
-
-    role_id = 1193969637226987600
-    role = member.guild.get_role(role_id)
-
-    if role:
-        await member.add_roles(role)
-
 
 @bot.event
 async def on_member_join(member):
@@ -196,11 +182,12 @@ async def monitor_db_changes():
                             if member:
                                 try:
                                     # 로블록스 사용자 객체 가져오기
+                                    user = await roblox_client.get_user_by_username(roblox_name)
 
                                     role = guild.get_role(1284389914032476181)  # 부여할 디스코드 역할 ID 입력
                                     if role:
                                         await member.add_roles(role)
-                                        await member.remove_roles(guild.get_role(1193969637226987600))
+                                        await member.remove_roles(1193969637226987600)
                                         await member.edit(nick=f"{roblox_name} | 손님")
 
                                     # DM 전송
@@ -219,7 +206,6 @@ async def monitor_db_changes():
                             print(f"디스코드 서버를 찾을 수 없습니다 - 서버 ID: 1170751784608858172")
     except Exception as e:
         print("전송 안됨")
-
 
 as_token = os.environ['BOT_TOKEN']
 bot.run(as_token)
