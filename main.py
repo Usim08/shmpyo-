@@ -1,3 +1,4 @@
+import os
 from typing import Any
 import discord
 import pymongo
@@ -7,7 +8,6 @@ import asyncio
 import motor.motor_asyncio
 from roblox import Client
 from roblox import AvatarThumbnailType  # AvatarThumbnailType을 임포트
-import os
 
 intents = discord.Intents.default()
 intents.message_content = True
