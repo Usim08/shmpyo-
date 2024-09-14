@@ -9,11 +9,8 @@ from roblox import Client
 from roblox import AvatarThumbnailType  # AvatarThumbnailType을 임포트
 import os
 
-intents = discord.Intents.default()
-intents.message_content = True
-intents.guilds = True
-intents.members = True
-intents.all()
+
+intents = discord.Intents.all()
 
 bot = commands.Bot(command_prefix="!", intents=intents, application_id="1193950006714040461")
 
