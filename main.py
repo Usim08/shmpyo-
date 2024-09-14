@@ -10,14 +10,17 @@ from roblox import Client
 from roblox import AvatarThumbnailType  # AvatarThumbnailType을 임포트
 
 
-intents = discord.Intents.all()
+intents = discord.Intents.default()
+intents.message_content = True
+intents.guilds = True
+intents.members = True
+intents.all()
 
 bot = commands.Bot(command_prefix="!", intents=intents, application_id="1193950006714040461")
 
 # MongoDB 클라이언트 연결
 client = motor.motor_asyncio.AsyncIOMotorClient("mongodb+srv://Usim:1234@cluster0.2mpijnh.mongodb.net/?retryWrites=true&w=majority")
 db = client.shmpyo
-GROUP_ID = 34946124
 roblox_client = Client("_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_46E968A6B38AFE39D46A99D9598B6AB1A503F5C18DBE7942D048DECC21638F427F9C4FCB0BDE061025519D04A7369CE8C1248D08EF471DF0DFF0D7A4FA4A4B505C31369346355E7CDBFF67D79C8A3D8CE2E122CB5F288B35AF5893D1118AA64D794256C4C33AB5D19F56DAA2F0C9E3BEDE8303F0EB3AF749A99EEBCF1AD33C76AC968DDDCD2E1691E063ED7E63D8E51BB51679D59E2C6A2A04DB60EE629B20DAA84D77F3916FFBD3A50831ED9C74374D6AE113E23F2DC0865E346041265A3512A72787BE3010BCB743C730C44C8C3D8A1F2BF996AF3E70B0D832380A63FBF4971170B1AAB321E61EEAEDA0CFAEBF11609EA76D72168E068E4BBED4E27DBA06C54613D536CA13930AA8BDB6034535C98B39ADC2FCA8D09819FFD84BCF0030C0726355A3EB8B89351765295C56E095DD4090AE924B1385C7646F241F04A87BA28EB672CFC907746196B819AC741797B6F9FDE631DFDEC367FABB554965CF73EA52A49DC54CAA05A04F671D9496A89AF182504250E5BF227233F1B49B1C9E2BBFB4892079BCE84F6E1BCAF9509721AF1C777B45F80E17A8A1FA6B7EFEE41AA09D6FAFD2E7EDEED0E4B3F5A01E48BFFC77CC9FF0D6C56421A0625A5D7F71BC3BD1EB2D254E887FF3DD8B0285706393C56466DD38A424D2017F5F38E8C0F6938D24EB0943FFDF15D1909D973E9E71691DF5767D8195DF419DAE189FB6695D12AE79961AC5550CE531B43BB901BADC62BD0D584D31F95D91D22B6C2F132441281B8FEB29870CDA50C44FCE97B3302DB15E64B6B4393B585ECEE9DB123B98E7FA17E52C12FF99FB45B8F85DFA6D5C1041341312E4BFA5473C3FAF22B0D108AF4E6071915C84716022DDCF5DB6F8BD4F96466F3A11A86E0C3384CBE551ACC748492445CBC5C095C0A7000DFC3AB2BAD98F5FF8C17B002317")
 
 @bot.event
@@ -36,10 +39,13 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-    role_id = 1170767094753792030
+
+    role_id = 1193969637226987600
     role = member.guild.get_role(role_id)
+
     if role:
         await member.add_roles(role)
+
 
 class DeleteData(discord.ui.Modal, title="유저 데이터 삭제"):
     DCID = discord.ui.TextInput(label="삭제할 유저의 디코 아이디를 입력하세요", placeholder="0", required=True, style=discord.TextStyle.short)
@@ -179,12 +185,11 @@ async def monitor_db_changes():
                             if member:
                                 try:
                                     # 로블록스 사용자 객체 가져오기
-                                    user = await roblox_client.get_user_by_username(roblox_name)
 
                                     role = guild.get_role(1284389914032476181)  # 부여할 디스코드 역할 ID 입력
                                     if role:
                                         await member.add_roles(role)
-                                        await member.remove_roles(1193969637226987600)
+                                        await member.remove_roles(guild.get_role(1193969637226987600))
                                         await member.edit(nick=f"{roblox_name} | 손님")
 
                                     # DM 전송
