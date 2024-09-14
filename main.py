@@ -26,16 +26,11 @@ roblox_client = Client("_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-s
 @bot.event
 async def on_ready():
     channel = bot.get_channel(1284347203204415539)
-    await channel.send(content="버블봇이 준비되었습니다")
+    await channel.send(content="울산봇이 준비되었습니다")
     await bot.tree.sync()
-    await bot.change_presence(
-        activity=discord.Activity(type=discord.ActivityType.listening, name="쉼표 shmpyo"),
-        status=discord.Status.idle
-    )
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="DILLY, 울산"))
     print("봇 준비완료")
 
-    # MongoDB Change Stream 설정
-    asyncio.create_task(monitor_db_changes())
 
 @bot.event
 async def on_member_join(member):
