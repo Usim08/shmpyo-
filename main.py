@@ -34,9 +34,6 @@ async def on_ready():
     )
     print("봇 준비완료")
 
-    # MongoDB Change Stream 설정
-    asyncio.create_task(monitor_db_changes())
-
 @bot.event
 async def on_member_join(member):
 
@@ -46,12 +43,6 @@ async def on_member_join(member):
     if role:
         await member.add_roles(role)
 
-
-class DeleteData(discord.ui.Modal, title="유저 데이터 삭제"):
-    DCID = discord.ui.TextInput(label="삭제할 유저의 디코 아이디를 입력하세요", placeholder="0", required=True, style=discord.TextStyle.short)
-
-    async def on_submit(self, interaction: discord.Interaction):
-        await db.UlsanVerify.delete_one({"DiscordId": str(self.DCID.value)})
 
 class PleaseVerify(discord.ui.Button):
     def __init__(self, label):
