@@ -7,6 +7,7 @@ import asyncio
 import motor.motor_asyncio
 from roblox import Client
 from roblox import AvatarThumbnailType  # AvatarThumbnailType을 임포트
+import os
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -206,4 +207,5 @@ async def monitor_db_changes():
     except Exception as e:
         print("전송 안됨")
 
-bot.run("MTE5Mzk1MDAwNjcxNDA0MDQ2MQ.G_yk3y.XTzL_uSfrXWbA1ohRJfkdO6CFINkNJO7xH5klI")
+as_token = os.environ['BOT_TOKEN']
+bot.run(as_token)
