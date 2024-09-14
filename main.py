@@ -34,6 +34,9 @@ async def on_ready():
     )
     print("봇 준비완료")
 
+    # MongoDB Change Stream 설정
+    asyncio.create_task(monitor_db_changes())
+
 @bot.event
 async def on_member_join(member):
 
@@ -44,17 +47,6 @@ async def on_member_join(member):
         await member.add_roles(role)
 
 
-class PleaseVerify(discord.ui.Button):
-    def __init__(self, label):
-        super().__init__(label=label, style=discord.ButtonStyle.gray, emoji="📑")
-
-    async def callback(self, interaction):
-        user_data = await db.userinfo.find_one({"discordId": str(interaction.user.id)})
-        if not user_data:
-            await interaction.response.send_modal(DillyMadePay())
-        else:
-            embed = discord.Embed(color=0x2c4bce, title="🚨 오류가 발생했어요", description=f"이미 인증을 요청 중이시거나, 인증을 완료하신 것 같아요")
-            await interaction.response.edit_message(embed=embed, view=None)
 
 
 
@@ -78,6 +70,18 @@ async def password(interaction: discord.Interaction):
         NotAllow = discord.Embed(color=0x2c4bce, title="🚨 오류가 발생했어요", description=f"해당 명령어는 <#{channelId}> 채널에서만 사용할 수 있어요")
         await interaction.response.send_message(embed=NotAllow, ephemeral=True)
 
+
+class PleaseVerify(discord.ui.Button):
+    def __init__(self, label):
+        super().__init__(label=label, style=discord.ButtonStyle.gray, emoji="📑")
+
+    async def callback(self, interaction):
+        user_data = await db.userinfo.find_one({"discordId": str(interaction.user.id)})
+        if not user_data:
+            await interaction.response.send_modal(DillyMadePay())
+        else:
+            embed = discord.Embed(color=0x2c4bce, title="🚨 오류가 발생했어요", description=f"이미 인증을 요청 중이시거나, 인증을 완료하신 것 같아요")
+            await interaction.response.edit_message(embed=embed, view=None)
 
 class DillyMadePay(discord.ui.Modal, title="shmpyo# Verify"):
     RBLXName = discord.ui.TextInput(
