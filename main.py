@@ -42,7 +42,7 @@ async def on_member_join(member):
     role = member.guild.get_role(role_id)
 
     if role:
-        user_data = await db.userinfo.find_one({"discordId": str(member.user.id)})
+        user_data = await db.userinfo.find_one({"discordId": str(member.id)})
         if not user_data:
             await member.add_roles(role)
         else:
