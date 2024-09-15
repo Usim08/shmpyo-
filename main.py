@@ -42,7 +42,23 @@ async def on_member_join(member):
     role = member.guild.get_role(role_id)
 
     if role:
-        await member.add_roles(role)
+        user_data = await db.userinfo.find_one({"discordId": str(member.user.id)})
+        if not user_data:
+            await member.add_roles(role)
+        else:
+            guild = bot.get_guild(1193811936673026129)  # 디스코드 서버 ID 입
+            roblox_name = user_data.get("playerName")
+
+            cus = guild.get_role(1284389914032476181)  # 부여할 디스코드 역할 ID 입력
+            await member.add_roles(cus)
+            await member.edit(nick=f"{roblox_name} | 손님")
+
+            embed = discord.Embed(color=0x2c4bce, title="다시 돌아오셨네요 👋", description=f"{roblox_name}님의 인증 이력이 있어 자동인증 해드렸어요. 쉼표샵으로 돌아가보세요!")
+            button = discord.ui.Button(label="쉼표샵으로 돌아가기", style=discord.ButtonStyle.blurple, emoji="↩️", url="https://discord.gg/FW6AxEe8Xj")
+            view = discord.ui.View()
+            view.add_item(button)
+            embed.set_image(url="https://media.discordapp.net/attachments/1193969295881933010/1284440329038200903/38318689a95b6feb.png?ex=66e6a3c6&is=66e55246&hm=95e6816a1f4f25e3e2dc2408f45374b673c98079499a21faf6832b02f19f6c59&=&format=webp&quality=lossless")
+            await member.send(embed=embed, view=view)
 
 
 
