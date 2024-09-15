@@ -1,4 +1,3 @@
 discord.py==2.4.0
 pymongo==4.8.0
 roblox==2.0.0
-robloxpy==0.2.21
