@@ -199,7 +199,7 @@ async def monitor_db_changes():
                                     if role:
                                         await member.add_roles(role)
                                         await member.remove_roles(guild.get_role(1193969637226987600))
-                                        await member.edit(nick=f"{roblox_name} | 손님")
+                                        await member.edit(nick=f"{roblox_name}")
 
                                     # DM 전송
                                     try:
