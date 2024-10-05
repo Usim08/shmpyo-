@@ -267,6 +267,8 @@ class add_partner(discord.ui.Modal, title="파트너 서버 등록하기"):
             "serverName" : svn
         })
 
+
+
         try:
             embed = discord.Embed(color=0x2c4bce, title="안녕하세요, 쉼표샵입니다 👋", description=f"# 쉼표샵 파트너가 되신 것을 축하드려요!\n안녕하세요, {svn} 서버장님! 쉼표샵 파트너가 되신 것을 축하드려요! 서버장님께서는 원활한 파트너 관리를 위하여, 디스코드 서버 파트너 채널에 아래 쉼표샵 소개글을 올려주세요.\n\n```# [로블록스 시스템 전문 판매 :: 쉼표샵](https://www.shmpyoshop.com/home)\n> ## :clipboard: **저희 쉼표샵은요..**\n> \n> \n> - 다른 샵에서는 찾아볼 수 없었던 퀄리티가 남다른 로블록스 상품들을 판매하고 있어요.\n> - 최고의 시스템 환경을 제공하여 유저가 보다 서버를 쾌적할 수 있게 도와드리고 있어요.\n> - 홈페이지에서 직접 상품 비밀코드를 입력하여 등록하기 때문에 보다 안전하고, 간편하게 이용할 수 있어요.\n\n> :house:  **홈페이지 바로가기**\n> ↪ https://www.shmpyoshop.com/home\n> \n> :speech_balloon:  **디스코드 바로가기**\n> ↪ https://discord.gg/FW6AxEe8Xj\n\n-# 간편하게 똑똑하게```")
             button = discord.ui.Button(label="쉼표샵으로 돌아가기", style=discord.ButtonStyle.blurple, emoji="↩️", url="https://discord.gg/FW6AxEe8Xj")
@@ -276,8 +278,20 @@ class add_partner(discord.ui.Modal, title="파트너 서버 등록하기"):
             guild = bot.get_guild(1193811936673026129)
             member = guild.get_member(int(plrid))
             await member.send(embed=embed, view=view)
+
+            embed = discord.Embed(
+                colour=discord.Colour.red(),
+                title="✅ 파트너 체결이 완료되었어요!",
+                description=f"{svn}과(와) 파트너 체결이 완료되었습니다."
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
         except discord.Forbidden:
-            return
+            embed = discord.Embed(
+                colour=discord.Colour.red(),
+                title="🚨 오류가 발생했어요",
+                description="서버장님에게 디엠 보내기를 실패했어요."
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
 as_token = os.environ['BOT_TOKEN']
 bot.run(as_token)
