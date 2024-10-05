@@ -26,7 +26,7 @@ roblox_client = Client("_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-s
 @bot.event
 async def on_ready():
     channel = bot.get_channel(1284347203204415539)
-    await channel.send(content="버블봇이 준비되었습니다")
+    await channel.send(content="쉼표봇이 준비되었습니다")
     await bot.tree.sync()
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="쉼표, shmpyo"),status=discord.Status.idle)
     print("봇 준비완료")
@@ -217,6 +217,67 @@ async def monitor_db_changes():
                             print(f"디스코드 서버를 찾을 수 없습니다 - 서버 ID: 1170751784608858172")
     except Exception as e:
         print("전송 안됨")
+
+
+@bot.tree.command(name="관리자전용", description="해당 명령어는 쉼표샵 매니저만 이용할 수 있어요")
+async def password(interaction: discord.Interaction):
+    if str(interaction.user.id) == str(751835293924982957):
+        viewww = SelectAdmin()
+        await interaction.response.send_message("선택사항을 선택하세요", view=viewww, ephemeral=True)
+    else:
+        embed = discord.Embed(color=0xC47A31, title="🚨 오류가 발생했어요", description=f"해당 명령어는 쉼표샵 매니저만 이용할 수 있어요.")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+class SelectAdmin(View):
+    @discord.ui.select(
+        placeholder="선택사항 선택",
+        options=[
+            discord.SelectOption(
+                label="파트너 등록하기",
+                value='1',
+                description="파트너를 등록합니다",
+                emoji="🔑"
+            )
+        ]
+    )
+
+
+    async def select_callback(self, interaction, select):
+        select.disabled = True
+        
+        if select.values[0] == '1':
+            await interaction.response.send_modal(add_partner())
+
+
+
+class add_partner(discord.ui.Modal, title="파트너 서버 등록하기"):
+    serverId = discord.ui.TextInput(label="파트너 서버 아이디를 알려주세요", required=True, style=discord.TextStyle.short)
+    serverName = discord.ui.TextInput(label="파트너 서버 이름을 알려주세요", required=True, style=discord.TextStyle.short)
+    playerId = discord.ui.TextInput(label="파트너 서버장 아이디를 알려주세요", required=True, style=discord.TextStyle.short)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        svid = self.serverId.value
+        svn = self.serverName.value
+        plrid = self.playerId.value
+        guild = interaction.guild
+
+        user_data = db.partner.insert_one({
+            "serverId" : str(svid),
+            "playerId" : plrid,
+            "serverName" : svn
+        })
+
+        try:
+            embed = discord.Embed(color=0x2c4bce, title="안녕하세요, 쉼표샵입니다 👋", description=f"# 쉼표샵 파트너가 되신 것을 축하드려요!\n안녕하세요, {svn} 서버장님! 쉼표샵 파트너가 되신 것을 축하드려요! 서버장님께서는 원활한 파트너 관리를 위하여, 디스코드 서버 파트너 채널에 아래 쉼표샵 소개글을 올려주세요.\n\n```# [로블록스 시스템 전문 판매 :: 쉼표샵](https://www.shmpyoshop.com/home)\n> ## :clipboard: **저희 쉼표샵은요..**\n> \n> \n> - 다른 샵에서는 찾아볼 수 없었던 퀄리티가 남다른 로블록스 상품들을 판매하고 있어요.\n> - 최고의 시스템 환경을 제공하여 유저가 보다 서버를 쾌적할 수 있게 도와드리고 있어요.\n> - 홈페이지에서 직접 상품 비밀코드를 입력하여 등록하기 때문에 보다 안전하고, 간편하게 이용할 수 있어요.\n\n> :house:  **홈페이지 바로가기**\n> ↪ https://www.shmpyoshop.com/home\n> \n> :speech_balloon:  **디스코드 바로가기**\n> ↪ https://discord.gg/FW6AxEe8Xj\n\n-# 간편하게 똑똑하게```")
+            button = discord.ui.Button(label="쉼표샵으로 돌아가기", style=discord.ButtonStyle.blurple, emoji="↩️", url="https://discord.gg/FW6AxEe8Xj")
+
+            view = discord.ui.View()
+            view.add_item(button)
+            guild = bot.get_guild(1193811936673026129)
+            member = guild.get_member(int(plrid))
+            await member.send(embed=embed, view=view)
+        except discord.Forbidden:
+            return
 
 as_token = os.environ['BOT_TOKEN']
 bot.run(as_token)
