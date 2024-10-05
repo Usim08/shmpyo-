@@ -280,7 +280,7 @@ class add_partner(discord.ui.Modal, title="파트너 서버 등록하기"):
             await member.send(embed=embed, view=view)
 
             embed = discord.Embed(
-                colour=discord.Colour.red(),
+                color=0x2c4bce,
                 title="✅ 파트너 체결이 완료되었어요!",
                 description=f"{svn}과(와) 파트너 체결이 완료되었습니다."
             )
