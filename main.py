@@ -84,6 +84,7 @@ async def on_guild_channel_create(channel):
             description="### 상담 전, 안내사항 📃\n\n> - 배정되는 동안 안내해드린 양식을 미리 작성해 주시면, 보다 빠르게 담당 매니저를 배정받으실 수 있습니다.\n> - 상담이 시작되면, 담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
             color=0x2c4bce
         )
+        await asyncio.sleep(1)
         message = await channel.send(embed=embed)
         
         # 메시지 정보를 DB에 저장
