@@ -51,7 +51,7 @@ async def on_member_join(member):
 
             cus = guild.get_role(1284389914032476181)  # 부여할 디스코드 역할 ID 입력
             await member.add_roles(cus)
-            await member.edit(nick=f"{roblox_name} | 손님")
+            await member.edit(nick=f"{roblox_name}")
 
             embed = discord.Embed(color=0x2c4bce, title="다시 돌아오셨네요 👋", description=f"{roblox_name}님의 인증 이력이 있어 자동인증 해드렸어요. 쉼표샵으로 돌아가보세요!")
             button = discord.ui.Button(label="쉼표샵으로 돌아가기", style=discord.ButtonStyle.blurple, emoji="↩️", url="https://discord.gg/FW6AxEe8Xj")
@@ -70,6 +70,63 @@ async def on_message(message):
     channel_id = 1193969935593001091
     if message.channel.id == channel_id:
         await message.delete()
+
+role_id = 1284390999904489596  # 특정 역할 ID
+CATEGORY_ID = 1294588527560097913  # 특정 카테고리 ID
+message_collection = db["channel_messages"]
+
+@bot.event
+async def on_guild_channel_create(channel):
+    # 카테고리 확인
+    if isinstance(channel, discord.TextChannel) and channel.category_id == CATEGORY_ID:
+        embed = discord.Embed(
+            title="<:shmpyo_loading:1294601454048510033> 담당 매니저 배정을 기다리고 있어요",
+            description="### 상담 전, 안내사항 📃\n\n> - 배정되는 동안 안내해드린 양식을 미리 작성해 주시면, 보다 빠르게 담당 매니저를 배정받으실 수 있습니다.\n> - 상담이 시작되면, 담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
+            color=0x2c4bce
+        )
+        message = await channel.send(embed=embed)
+        
+        # 메시지 정보를 DB에 저장
+        await message_collection.insert_one({"channel_id": channel.id, "message_id": message.id})
+
+async def get_message_id(channel_id):
+    # DB에서 채널 ID로 메시지 ID 찾기
+    message_data = await message_collection.find_one({"channel_id": channel_id})
+    return message_data["message_id"] if message_data else None
+
+@bot.event
+async def on_message(msg):
+    if msg.content == "!담당하기":
+        member = msg.author
+        role = discord.utils.get(member.guild.roles, id=role_id)
+
+        if role in member.roles:
+            # 저장된 메시지 ID로 메시지 찾기
+            message_id = await get_message_id(msg.channel.id)
+            userName = await db.userinfo.find_one({"discordId": str(member.id)})
+            if message_id:
+                try:
+                    old_message = await msg.channel.fetch_message(int(message_id))
+                    await old_message.delete()  # 기존 임베드 메시지 삭제
+                    await msg.delete()
+
+                    # 새로운 임베드 전송
+                    embed = discord.Embed(
+
+                        title="상담이 시작되었습니다!",
+                        description=f"### 담당 매니저 : <:shmpyo_manager:1294603617990348800> {userName.get('playerName')}\n담당 매니저에게 폭언, 욕설 등은 삼가해주세요.\n담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
+                        color=0x2c4bce
+                    )
+                    await msg.channel.send(embed=embed)
+
+                    await message_collection.delete_one({"channel_id": msg.channel.id})
+
+                except discord.NotFound:
+                    await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=5)
+            else:
+                await msg.channel.send("메시지 ID를 찾을 수 없습니다.", delete_after=5)
+        else:
+            await msg.channel.send(f"{member.mention}, 이 명령어를 사용할 권한이 없습니다.", delete_after=5)
 
 @bot.tree.command(name="인증하기", description="쉼표샵을 이용하기 위한 인증을 진행합니다")
 async def password(interaction: discord.Interaction):
