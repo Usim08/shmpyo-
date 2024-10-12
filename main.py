@@ -237,16 +237,76 @@ class SelectAdmin(View):
                 value='1',
                 description="파트너를 등록합니다",
                 emoji="🔑"
+            ),
+            discord.SelectOption(
+                label="사전예약 등록하기",
+                value='2',
+                description="사전예약을 진행합니다",
+                emoji="📃"
             )
         ]
     )
 
-
     async def select_callback(self, interaction, select):
         select.disabled = True
-        
+
         if select.values[0] == '1':
             await interaction.response.send_modal(add_partner())
+
+        if select.values[0] == '2':
+            embed = discord.Embed(title="상품코드 목록", description="원하는 상품코드를 선택해주세요", color=0x00ff00)
+
+            product_codes = db.goodNumber.find({})
+            for product in await product_codes.to_list(length=None):
+                code = product.get("code")
+                name = product.get("name")
+                embed.add_field(name=code, value=name, inline=False)
+
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+            try:
+                def check(msg):
+                    return msg.author == interaction.user and msg.channel == interaction.channel
+
+                message = await bot.wait_for('message', timeout=30, check=check)
+
+                selected_code = message.content
+
+                await interaction.followup.send("사전예약 대상자를 멘션해주세요.", ephemeral=True)
+                message = await bot.wait_for('message', timeout=30, check=check)
+
+                mentioned_users = message.mentions
+                if not mentioned_users:
+                    await interaction.followup.send("사전예약 대상 유저를 멘션해주세요.", ephemeral=True)
+                    return
+
+                user = mentioned_users[0]
+                secret_code_data = await db.secretcodes.find_one({"userid": ""})
+                gn = await db.goodNumber.find_one({"code": selected_code})
+                goodsName = gn["name"]
+
+                if secret_code_data:
+                    db.secretcodes.update_one(
+                        {"_id": secret_code_data["_id"]},
+                        {"$set": {"userid": str(user.id), "goodsnumber": selected_code, "goodsname":goodsName}}
+                    )
+                    # 유저에게 DM 보내기
+                    secret_key = secret_code_data["secret"]
+
+                    dm_embed = discord.Embed(color=0x2c4bce, title="사전예약이 완료되었어요 👏", description=f"## 사전예약이 정상적으로 처리되었어요!\n아래에서 비밀코드를 확인해 보세요.\n-# 비밀코드 유출 시, 이용규정에 따라 처벌받으실 수 있으니, 유의해주세요!")
+                    button = discord.ui.Button(label="쉼표샵으로 돌아가기", style=discord.ButtonStyle.blurple, emoji="↩️", url="https://discord.gg/FW6AxEe8Xj")
+                    view = discord.ui.View()
+                    dm_embed.add_field(name="사전예약 상품", value=goodsName, inline=True)
+                    dm_embed.add_field(name="상품의 비밀코드", value=f"||{secret_key}||", inline=True)
+                    view.add_item(button)
+                    dm_embed.set_image(url="https://media.discordapp.net/attachments/1291811758830518313/1294531011706617927/376674b49149509f.png?ex=670b5974&is=670a07f4&hm=21687593cae6d6042122e0f175665708c4bd99b6fd490e3d64b58808b01dfd6c&=&format=webp&quality=lossless")
+                    await user.send(embed=dm_embed)
+                    await interaction.followup.send(f"{user.mention}에게 DM으로 상품 코드를 보냈습니다.", ephemeral=True)
+                else:
+                    await interaction.followup.send("사용 가능한 시크릿 코드가 없습니다.", ephemeral=True)
+
+            except asyncio.TimeoutError:
+                await interaction.followup.send("시간이 초과되었습니다. 다시 시도해주세요.", ephemeral=True)
 
 
 
