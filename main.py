@@ -161,7 +161,7 @@ async def on_message(msg):
                     )
 
                     await ticket_user.send(embed=userembed)
-
+                    await message_collection.delete_one({"channel_id": msg.channel.id})
 
                     embed = discord.Embed(
                         title="상담이 종료되었습니다",
