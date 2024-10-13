@@ -156,7 +156,7 @@ async def on_message(msg):
                 try:
                     userembed = discord.Embed(
                         title="상담이 종료됐어요 📑",
-                        description=f"\n진행하셨던 상담에 대해 만족하셨나요?\n__[여기를 눌러](https://forms.gle/JWtJsByuU5QQvxeA7)__ 설문조사에 응해주세요!\n티켓번호 : `{userName.get('channel_name')}`\n-# 티켓번호를 복사하여 설문지에 붙여넣어주세요.",
+                        description=f"\n## 진행하셨던 상담에 대해 만족하셨나요?\n### [여기를 눌러](https://forms.gle/JWtJsByuU5QQvxeA7) 설문조사에 응해주세요!\n**티켓번호 : `{userName.get('channel_name')}`**\n-# 티켓번호를 복사하여 설문지에 붙여넣어주세요.",
                         color=0x2c4bce
                     )
 
