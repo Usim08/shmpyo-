@@ -71,6 +71,8 @@ async def on_message(message):
     if message.channel.id == channel_id:
         await message.delete()
 
+
+
 role_id = 1284390999904489596  # 특정 역할 ID
 CATEGORY_ID = 1294588527560097913  # 특정 카테고리 ID
 message_collection = db["channel_messages"]
@@ -88,7 +90,7 @@ async def on_guild_channel_create(channel):
         message = await channel.send(embed=embed)
         
         # 메시지 정보를 DB에 저장
-        await message_collection.insert_one({"channel_id": channel.id, "message_id": message.id})
+        await message_collection.insert_one({"channel_id": channel.id, "message_id": message.id, "channel_name": channel.name})
 
 async def get_message_id(channel_id):
     # DB에서 채널 ID로 메시지 ID 찾기
@@ -97,14 +99,15 @@ async def get_message_id(channel_id):
 
 @bot.event
 async def on_message(msg):
+    # '!담당하기' 명령 처리
     if msg.content == "!담당하기":
         member = msg.author
         role = discord.utils.get(member.guild.roles, id=role_id)
 
         if role in member.roles:
-            # 저장된 메시지 ID로 메시지 찾기
             message_id = await get_message_id(msg.channel.id)
             userName = await db.userinfo.find_one({"discordId": str(member.id)})
+            
             if message_id:
                 try:
                     old_message = await msg.channel.fetch_message(int(message_id))
@@ -113,21 +116,65 @@ async def on_message(msg):
 
                     # 새로운 임베드 전송
                     embed = discord.Embed(
-
                         title="상담이 시작되었습니다!",
                         description=f"### 담당 매니저 : <:shmpyo_manager:1294603617990348800> {userName.get('playerName')}\n담당 매니저에게 폭언, 욕설 등은 삼가해주세요.\n담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
                         color=0x2c4bce
                     )
-                    await msg.channel.send(embed=embed)
+                    meeeeesage = await msg.channel.send(embed=embed)
 
-                    await message_collection.delete_one({"channel_id": msg.channel.id})
+                    message_collection.update_one(
+                    {"channel_id": meeeeesage.channel.id},
+                    {"$set": {"message_id": meeeeesage.id}}
+            )
 
                 except discord.NotFound:
-                    await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=5)
+                    await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=2)
+
+    elif msg.content.startswith("!상담종료"):
+        member = msg.author
+        role = discord.utils.get(member.guild.roles, id=role_id)
+
+        if role in member.roles:
+            message_id = await get_message_id(msg.channel.id)
+            old_message = await msg.channel.fetch_message(int(message_id))
+            await old_message.delete()
+            await msg.delete()
+            try:
+                user_id = int(msg.content.split()[1])
+            except (IndexError, ValueError):
+                await msg.channel.send("올바른 유저 ID를 입력해주세요.", delete_after=2)
+                return
+
+            # 유저 객체를 서버에서 찾기
+            ticket_user = msg.guild.get_member(user_id)
+            ticket_number = msg.guild.get_member(user_id)
+
+            userName = await db.channel_messages.find_one({"channel_id": msg.channel.id})
+
+            if ticket_user:
+                # 유저에게 DM 전송
+                try:
+                    userembed = discord.Embed(
+                        title="상담이 종료됐어요 📑",
+                        description=f"\n진행하셨던 상담에 대해 만족하셨나요?\n__[여기를 눌러](https://forms.gle/JWtJsByuU5QQvxeA7)__ 설문조사에 응해주세요!\n티켓번호 : `{userName.get('channel_name')}`\n-# 티켓번호를 복사하여 설문지에 붙여넣어주세요.",
+                        color=0x2c4bce
+                    )
+
+                    await ticket_user.send(embed=userembed)
+
+
+                    embed = discord.Embed(
+                        title="상담이 종료되었습니다",
+                        description=f"채널이 곧 삭제될 예정이에요. 문의하실 사항이 생긴다면 언제든지 다시 찾아와주세요 :)",
+                        color=0x2c4bce
+                    )
+                    await msg.channel.send(embed=embed)
+                except discord.Forbidden:
+                    await msg.channel.send(f"{ticket_user.mention}님에게 DM을 보낼 수 없습니다. DM 설정을 확인해주세요.", delete_after=2)
             else:
-                await msg.channel.send("메시지 ID를 찾을 수 없습니다.", delete_after=5)
-        else:
-            await msg.channel.send(f"{member.mention}, 이 명령어를 사용할 권한이 없습니다.", delete_after=5)
+                await msg.channel.send("유저를 찾을 수 없습니다. 유저 ID가 올바른지 확인해주세요.", delete_after=2)
+
+
 
 @bot.tree.command(name="인증하기", description="쉼표샵을 이용하기 위한 인증을 진행합니다")
 async def password(interaction: discord.Interaction):
