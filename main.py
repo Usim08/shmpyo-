@@ -165,7 +165,7 @@ async def on_message(msg):
 
                     embed = discord.Embed(
                         title="상담이 종료되었습니다",
-                        description=f"채널이 곧 삭제될 예정이에요. 문의하실 사항이 생긴다면 언제든지 다시 찾아와주세요 :)",
+                        description=f"채널이 곧 삭제될 예정이에요.\n문의하실 사항이 생긴다면 언제든지 다시 찾아와주세요 :)",
                         color=0x2c4bce
                     )
                     await msg.channel.send(embed=embed)
