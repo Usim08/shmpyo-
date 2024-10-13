@@ -137,12 +137,12 @@ async def on_message(msg):
         if role in member.roles:
             message_id = await get_message_id(msg.channel.id)
             old_message = await msg.channel.fetch_message(int(message_id))
-            await old_message.delete()
-            await msg.delete()
             try:
                 user_id = int(msg.content.split()[1])
+                await old_message.delete()
+                await msg.delete()
             except (IndexError, ValueError):
-                await msg.channel.send("올바른 유저 ID를 입력해주세요.", delete_after=2)
+                await msg.channel.send("올바른 유저 ID를 입력해주세요.", delete_after=1)
                 return
 
             # 유저 객체를 서버에서 찾기
