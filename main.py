@@ -348,6 +348,18 @@ class SelectAdmin(View):
                 value='2',
                 description="사전예약을 진행합니다",
                 emoji="📃"
+            ),
+            discord.SelectOption(
+                label="쿠폰 등록하기",
+                value='3',
+                description="쿠폰을 등록합니다",
+                emoji="📂"
+            ),
+            discord.SelectOption(
+                label="쿠폰 사용하기",
+                value='4',
+                description="쿠폰을 사용합니다",
+                emoji="⭐"
             )
         ]
     )
@@ -412,6 +424,71 @@ class SelectAdmin(View):
 
             except asyncio.TimeoutError:
                 await interaction.followup.send("시간이 초과되었습니다. 다시 시도해주세요.", ephemeral=True)
+
+        if select.values[0] == '3':
+            await interaction.response.send_modal(add_coupon())
+        if select.values[0] == '4':
+            await interaction.response.send_modal(use_coupon())
+
+
+
+
+class add_coupon(discord.ui.Modal, title="쿠폰번호 등록하기"):
+    couponId = discord.ui.TextInput(label="등록할 쿠폰번호를 알려주세요", required=True, style=discord.TextStyle.short)
+    sale = discord.ui.TextInput(label="할인율을 알려주세요(숫자만)", required=True, style=discord.TextStyle.short)
+    player = discord.ui.TextInput(label="유저 아이디를 알려주세요", required=True, style=discord.TextStyle.short)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        cpid = self.couponId.value
+        sl = self.sale.value
+        plrid = self.player.value
+
+        user_data = db.coupon.insert_one({
+            "couponId" : str(cpid),
+            "sale" : sl,
+            "playerId" : plrid
+        })
+
+        embed = discord.Embed(
+            color=0x2c4bce,
+            title="✅ 쿠폰이 등록되었어요!",
+            description=f"{cpid}({sl})를 쿠폰번호로 등록했어요!"
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+class use_coupon(discord.ui.Modal, title="쿠폰번호 사용하기"):
+    couponId = discord.ui.TextInput(label="사용할 쿠폰번호를 알려주세요", required=True, style=discord.TextStyle.short)
+    price = discord.ui.TextInput(label="결제하는 금액을 알려주세요(숫자만)", required=True, style=discord.TextStyle.short)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        cpid = self.couponId.value
+        price = int(self.price.value)  # 입력받은 금액을 정수로 변환
+        guild = interaction.guild
+        user = interaction.user
+
+        # 데이터베이스에서 쿠폰 정보 가져오기 (await 키워드 추가)
+        coupon_data = await db.coupon.find_one({"couponId": cpid})
+
+        if coupon_data:
+            sale = int(coupon_data["sale"])  # 할인율 (예: 50%)
+            discount_amount = price * sale // 100
+            final_price = price - discount_amount
+
+            # 쿠폰 삭제
+            await db.coupon.delete_one({"couponId": cpid})
+
+            # 성공 메시지 및 DM 전송
+            embed = discord.Embed(
+                color=0x2c4bce,
+                title="쿠폰이 사용되었어요! 🎫",
+                description=f"> 사용된 쿠폰번호 : {cpid}({sale}% 할인)\n\n기존 결제 금액 : {price}원\n최종 결제 금액: {final_price}원"
+            )
+            await user.send(embed=embed)  # 사용자에게 DM 전송
+            await interaction.response.send_message(f"쿠폰이 성공적으로 사용되었습니다!\n최종 결제 금액 : {final_price}원", ephemeral=True)
+        else:
+            await interaction.response.send_message("❌ 유효하지 않은 쿠폰번호입니다.", ephemeral=True)
+
 
 
 
