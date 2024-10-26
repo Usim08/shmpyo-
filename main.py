@@ -465,29 +465,34 @@ class use_coupon(discord.ui.Modal, title="쿠폰번호 사용하기"):
         cpid = self.couponId.value
         price = int(self.price.value)  # 입력받은 금액을 정수로 변환
         guild = interaction.guild
-        user = interaction.user
 
         # 데이터베이스에서 쿠폰 정보 가져오기 (await 키워드 추가)
         coupon_data = await db.coupon.find_one({"couponId": cpid})
 
         if coupon_data:
             sale = int(coupon_data["sale"])  # 할인율 (예: 50%)
+            player_id = int(coupon_data["playerId"])  # 저장된 유저 ID
             discount_amount = price * sale // 100
             final_price = price - discount_amount
 
             # 쿠폰 삭제
             await db.coupon.delete_one({"couponId": cpid})
 
-            # 성공 메시지 및 DM 전송
-            embed = discord.Embed(
-                color=0x2c4bce,
-                title="쿠폰이 사용되었어요! 🎫",
-                description=f"> 사용된 쿠폰번호 : {cpid}({sale}% 할인)\n\n기존 결제 금액 : {price}원\n최종 결제 금액: {final_price}원"
-            )
-            await user.send(embed=embed)  # 사용자에게 DM 전송
-            await interaction.response.send_message(f"쿠폰이 성공적으로 사용되었습니다!\n최종 결제 금액 : {final_price}원", ephemeral=True)
+            # 해당 유저에게 DM 전송
+            user = guild.get_member(player_id)
+            if user:
+                embed = discord.Embed(
+                    color=0x2c4bce,
+                    title="쿠폰이 사용되었어요! 🎫",
+                    description=f"> 사용된 쿠폰번호 : {cpid}({sale}% 할인)\n\n기존 결제 금액 : {price}원\n최종 결제 금액: {final_price}원"
+                )
+                await user.send(embed=embed)  # 해당 유저에게 DM 전송
+                await interaction.response.send_message(f"쿠폰이 성공적으로 사용되었습니다!\n최종 결제 금액 : {final_price}원", ephemeral=True)
+            else:
+                await interaction.response.send_message("❌ 해당 유저를 찾을 수 없습니다.", ephemeral=True)
         else:
             await interaction.response.send_message("❌ 유효하지 않은 쿠폰번호입니다.", ephemeral=True)
+
 
 
 
