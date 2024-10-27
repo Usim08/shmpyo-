@@ -73,7 +73,7 @@ async def on_message(message):
 
 
 
-role_id = 1284390999904489596  # 특정 역할 ID
+role_id = 1300023197353246771  # 특정 역할 ID
 CATEGORY_ID = 1294588527560097913  # 특정 카테고리 ID
 message_collection = db["channel_messages"]
 
