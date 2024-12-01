@@ -124,6 +124,7 @@ async def on_guild_channel_create(channel):
         else:
             print("해당 역할을 찾을 수 없습니다.")
 
+
 async def get_message_id(channel_id):
     # DB에서 채널 ID로 메시지 ID 찾기
     message_data = await message_collection.find_one({"channel_id": channel_id})
@@ -139,12 +140,11 @@ async def on_message(msg):
         if role in member.roles:
             message_id = await get_message_id(msg.channel.id)
             userName = await db.userinfo.find_one({"discordId": str(member.id)})
-            
 
             if message_id:
-                if message_id.get("manager"):
-                    try:
-                        old_message = await msg.channel.fetch_message(int(message_id))
+                try:
+                    old_message = await msg.channel.fetch_message(message_id)
+                    if old_message:
                         await old_message.delete()
                         await msg.delete()
 
@@ -153,25 +153,30 @@ async def on_message(msg):
                             description=f"### 담당 매니저 : <:shmpyo_manager:1294603617990348800> {userName.get('playerName')}\n담당 매니저에게 폭언, 욕설 등은 삼가해주세요.\n담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
                             color=0x2c4bce
                         )
-                        meeeeesage = await msg.channel.send(embed=embed)
+                        new_message = await msg.channel.send(embed=embed)
 
-                        message_collection.update_one(
-                        {"channel_id": meeeeesage.channel.id},
-                        {"$set": {"message_id": meeeeesage.id,
-                        "manager": member.id}})
-
-                    except discord.NotFound:
-                        await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=2)
-                else:
-                    try:
-                        sem = discord.Embed(
-                            title="이미 상담 진행 중인 티켓이에요",
-                            description=f"### 담당 매니저 : <:shmpyo_manager:1294603617990348800> {userName.get('playerName')}",
-                            color=0x2c4bce
+                        # DB 업데이트
+                        await message_collection.update_one(
+                            {"channel_id": msg.channel.id},
+                            {"$set": {"message_id": new_message.id, "manager": member.id}}
                         )
-                        await member.send(embed=sem)
-                    except discord.Forbidden:
-                        await msg.channel.send("이미 상담 진행 중인 티켓이에요", delete_after=1)
+                    else:
+                        await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=2)
+                except discord.NotFound:
+                    await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=2)
+                except discord.errors.HTTPException as e:
+                    print(f"Error while deleting or sending messages: {e}")
+            else:
+                try:
+                    sem = discord.Embed(
+                        title="이미 상담 진행 중인 티켓이에요",
+                        description=f"### 담당 매니저 : <:shmpyo_manager:1294603617990348800> {userName.get('playerName')}",
+                        color=0x2c4bce
+                    )
+                    await member.send(embed=sem)
+                except discord.Forbidden:
+                    await msg.channel.send("이미 상담 진행 중인 티켓이에요", delete_after=1)
+
 
     elif msg.content.startswith("!상담종료"):
         member = msg.author
