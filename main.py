@@ -148,8 +148,8 @@ async def on_message(msg):
                     # 이미 매니저가 배정된 경우
                     try:
                         sem = discord.Embed(
-                            title="이미 상담 진행 중인 티켓이에요",
-                            description=f"### 담당 매니저 : <:shmpyo_manager:1294603617990348800> {userName.get('playerName')}",
+                            title="이미 상담을 진행하고 있는 티켓이에요",
+                            description=f"담당 매니저 : <:shmpyo:1305069679722893372> {userName.get('playerName')}",
                             color=0x2c4bce
                         )
                         await member.send(embed=sem)
@@ -165,7 +165,7 @@ async def on_message(msg):
 
                             embed = discord.Embed(
                                 title="상담이 시작되었습니다",
-                                description=f"### 담당 매니저 : <:shmpyo_manager:1294603617990348800> {userName.get('playerName')}\n담당 매니저에게 폭언, 욕설 등은 삼가해주세요.\n담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
+                                description=f"### 담당 매니저 : <:shmpyo:1305069679722893372> {userName.get('playerName')} <:shmpyo_pitcle_to_text:1305068031151571014>\n담당 매니저에게 폭언, 욕설 등은 삼가해주세요.\n담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
                                 color=0x2c4bce
                             )
                             new_message = await msg.channel.send(embed=embed)
