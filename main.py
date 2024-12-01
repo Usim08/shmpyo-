@@ -145,7 +145,7 @@ async def on_message(msg):
                 # 메시지가 있을 경우 DB에서 'manager' 필드를 확인
                 message_data = await message_collection.find_one({"message_id": message_id})
                 if message_data and message_data.get("manager"):
-                    # 이미 매니저가 배정된 경우
+                    await msg.delete()
                     try:
                         sem = discord.Embed(
                             title="이미 상담을 진행하고 있는 티켓이에요",
@@ -154,6 +154,7 @@ async def on_message(msg):
                         )
                         await member.send(embed=sem)
                     except discord.Forbidden:
+                        await msg.delete()
                         await msg.channel.send("이미 상담 진행 중인 티켓이에요", delete_after=1)
                 else:
                     # 'manager'가 비어 있으면 상담 시작
