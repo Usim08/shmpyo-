@@ -82,15 +82,47 @@ async def on_guild_channel_create(channel):
     # 카테고리 확인
     if isinstance(channel, discord.TextChannel) and channel.category_id == CATEGORY_ID:
         embed = discord.Embed(
-            title="<:shmpyo_pitcle_blue:1305057058101657600> 담당 매니저 배정을 기다리고 있어요",
+            title="<:price:1293595552507760730> 담당 매니저 배정을 기다리고 있어요",
             description="### 상담 전, 안내사항 📃\n\n> - 배정되는 동안 안내해드린 양식을 미리 작성해 주시면, 보다 빠르게 상담을 진행할 수 있어요.\n> - 상담이 시작되면, 담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
             color=0x2c4bce
         )
-        await asyncio.sleep(1)
-        message = await channel.send(embed=embed)
+        message_to_channel = await channel.send(embed=embed)
         
-        # 메시지 정보를 DB에 저장
-        await message_collection.insert_one({"channel_id": channel.id, "message_id": message.id, "channel_name": channel.name})
+        # DB에 메시지 정보 저장
+        await message_collection.insert_one({
+            "channel_id": channel.id,
+            "message_id": message_to_channel.id,
+            "channel_name": channel.name,
+            "manager": ""  # 초기에는 담당자가 없으므로 빈 문자열로 설정
+        })
+
+        # 서버의 역할을 가져오기
+        guild = channel.guild  # guild 객체
+        iddididid = 1300023197353246771  # 역할 ID
+        role = discord.utils.get(guild.roles, id=iddididid)  # 역할 ID로 역할 찾기
+
+        if role:
+            for member in role.members:
+                if member.id != bot.user.id:  # 봇 자신에게 DM을 보내지 않도록
+                    try:
+                        # DM 채널이 없다면 새로 생성
+                        if not member.dm_channel:
+                            await member.create_dm()
+
+                        # DM 전송
+                        seembed = discord.Embed(
+                            title="<:price:1293595552507760730> 문의 티켓이 열렸어요",
+                            description=f"문의 티켓으로 이동하여 상담을 진행해 주세요.\n<#{channel.id}>",
+                            color=0x2c4bce
+                        )
+                        await member.dm_channel.send(embed=seembed)
+                    except discord.Forbidden:
+                        pass  # DM이 비활성화된 경우 무시
+                    except discord.errors.HTTPException as e:
+                        # 추가적인 예외 처리
+                        print(f"Failed to send DM to {member.name}: {e}")
+        else:
+            print("해당 역할을 찾을 수 없습니다.")
 
 async def get_message_id(channel_id):
     # DB에서 채널 ID로 메시지 ID 찾기
@@ -108,27 +140,38 @@ async def on_message(msg):
             message_id = await get_message_id(msg.channel.id)
             userName = await db.userinfo.find_one({"discordId": str(member.id)})
             
+
             if message_id:
-                try:
-                    old_message = await msg.channel.fetch_message(int(message_id))
-                    await old_message.delete()  # 기존 임베드 메시지 삭제
-                    await msg.delete()
+                if message_id.get("manager"):
+                    try:
+                        old_message = await msg.channel.fetch_message(int(message_id))
+                        await old_message.delete()
+                        await msg.delete()
 
-                    # 새로운 임베드 전송
-                    embed = discord.Embed(
-                        title="상담이 시작되었습니다!",
-                        description=f"### 담당 매니저 : <:shmpyo:1305069679722893372> {userName.get('playerName')} <:shmpyo_pitcle_to_text:1305068031151571014>\n담당 매니저에게 폭언, 욕설 등은 삼가해주세요.\n담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
-                        color=0x2c4bce
-                    )
-                    meeeeesage = await msg.channel.send(embed=embed)
+                        embed = discord.Embed(
+                            title="상담이 시작되었습니다",
+                            description=f"### 담당 매니저 : <:shmpyo_manager:1294603617990348800> {userName.get('playerName')}\n담당 매니저에게 폭언, 욕설 등은 삼가해주세요.\n담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
+                            color=0x2c4bce
+                        )
+                        meeeeesage = await msg.channel.send(embed=embed)
 
-                    message_collection.update_one(
-                    {"channel_id": meeeeesage.channel.id},
-                    {"$set": {"message_id": meeeeesage.id}}
-            )
+                        message_collection.update_one(
+                        {"channel_id": meeeeesage.channel.id},
+                        {"$set": {"message_id": meeeeesage.id,
+                        "manager": member.id}})
 
-                except discord.NotFound:
-                    await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=2)
+                    except discord.NotFound:
+                        await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=2)
+                else:
+                    try:
+                        sem = discord.Embed(
+                            title="이미 상담 진행 중인 티켓이에요",
+                            description=f"### 담당 매니저 : <:shmpyo_manager:1294603617990348800> {userName.get('playerName')}",
+                            color=0x2c4bce
+                        )
+                        await member.send(embed=sem)
+                    except discord.Forbidden:
+                        await msg.channel.send("이미 상담 진행 중인 티켓이에요", delete_after=1)
 
     elif msg.content.startswith("!상담종료"):
         member = msg.author
