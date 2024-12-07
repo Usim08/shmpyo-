@@ -420,6 +420,18 @@ class SelectAdmin(View):
                 value='4',
                 description="쿠폰을 사용합니다",
                 emoji="⭐"
+            ),
+            discord.SelectOption(
+                label="파트너 전체 대표 공지",
+                value='5',
+                description="파트너 전체 서버 대표에게 공지를 보냅니다",
+                emoji="📜"
+            ),
+            discord.SelectOption(
+                label="파트너 개별 대표 공지",
+                value='6',
+                description="파트너 개별 서버 대표에게 공지를 보냅니다",
+                emoji="📜"
             )
         ]
     )
@@ -489,7 +501,52 @@ class SelectAdmin(View):
             await interaction.response.send_modal(add_coupon())
         if select.values[0] == '4':
             await interaction.response.send_modal(use_coupon())
+        if select.values[0] == '5':
+            await interaction.response.send_modal(Partner())
+        if select.values[0] == '6':
+            await interaction.response.send_modal(OneSaup())
 
+
+
+class Partner(discord.ui.Modal, title="파트너 공지"):
+    Link = discord.ui.TextInput(label="공문 링크를 첨부하세요", required=True, style=discord.TextStyle.short)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        guild = interaction.guild
+        for member in guild.members:
+            unt = discord.utils.get(guild.roles, id=1294579392915312712)
+            if member.bot or unt not in member.roles:
+                continue
+
+            try:
+                embed = discord.Embed(color=0xC47A31, title=f"파트너 알림이 도착했어요 🔔", description=f"> To. `쉼표샵 파트너 대표 관리자 귀하`\n> **[지금 바로 확인하기]({self.Link.value})**")
+                await member.send(embed=embed)
+                yes = discord.Embed(color=0xC47A31, title="공지 전송 완료!", description="공지를 성공적으로 보냈어요.")
+                await interaction.response.edit_message(embed=yes, view=None)
+            except discord.Forbidden:
+                user = await bot.fetch_user(str(751835293924982957))
+                await user.send(content=f"{member.name}님에게 메시지 보내기에 실패했어요.")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+
+
+class OneSaup(discord.ui.Modal, title="개별 파트너 공지"):
+    Link = discord.ui.TextInput(label="공문 링크를 첨부하세요", required=True, style=discord.TextStyle.short)
+    SaupNumber = discord.ui.TextInput(label="공문을 보낼 서버 이름을 알려주세요", required=True, style=discord.TextStyle.short)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        guild = interaction.guild
+        user_data = db.partner.find_one({"serverName": str(self.SaupNumber.value)})
+
+        if user_data :
+            DiscordId = user_data.get("playerId")
+            SaupName = user_data.get("serverName")
+            
+            member = guild.get_member(int(DiscordId))
+            sendUser = discord.Embed(color=0xC47A31, title="파트너 알림이 도착했어요 🔔 (개인)", description=f"> To. `쉼표샵 파트너 대표({SaupName}) 관리자 귀하`\n> **[지금 바로 확인하기]({self.Link.value})**")
+            await member.send(embed=sendUser)
+            embed = discord.Embed(color=0xC47A31, title="<:ulsan:1183391095900602378> 전송 완료!", description=f"`{SaupName} 대표자`님에게 공문을 보냈어요.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 
