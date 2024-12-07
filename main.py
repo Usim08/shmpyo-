@@ -519,9 +519,9 @@ class Partner(discord.ui.Modal, title="파트너 공지"):
                 continue
 
             try:
-                embed = discord.Embed(color=0xC47A31, title=f"파트너 알림이 도착했어요 🔔", description=f"> To. `쉼표샵 파트너 대표 관리자 귀하`\n> **[지금 바로 확인하기]({self.Link.value})**")
+                embed = discord.Embed(color=0x2C4BCE, title=f"파트너 알림이 도착했어요 🔔", description=f"> To. `쉼표샵 파트너 대표 관리자 귀하`\n> **[지금 바로 확인하기]({self.Link.value})**")
                 await member.send(embed=embed)
-                yes = discord.Embed(color=0xC47A31, title="공지 전송 완료!", description="공지를 성공적으로 보냈어요.")
+                yes = discord.Embed(color=0x2C4BCE, title="공지 전송 완료!", description="공지를 성공적으로 보냈어요.")
                 await interaction.response.edit_message(embed=yes, view=None)
             except discord.Forbidden:
                 user = await bot.fetch_user(str(751835293924982957))
@@ -543,9 +543,9 @@ class OneSaup(discord.ui.Modal, title="개별 파트너 공지"):
             SaupName = user_data.get("serverName")
             
             member = guild.get_member(int(DiscordId))
-            sendUser = discord.Embed(color=0xC47A31, title="파트너 알림이 도착했어요 🔔 (개인)", description=f"> To. `쉼표샵 파트너 대표({SaupName}) 관리자 귀하`\n> **[지금 바로 확인하기]({self.Link.value})**")
+            sendUser = discord.Embed(color=0x2C4BCE, title="(개별통보) 파트너 알림이 도착했어요 🔔", description=f"> To. `쉼표샵 파트너 대표({SaupName}) 관리자 귀하`\n> **[지금 바로 확인하기]({self.Link.value})**")
             await member.send(embed=sendUser)
-            embed = discord.Embed(color=0xC47A31, title="<:ulsan:1183391095900602378> 전송 완료!", description=f"`{SaupName} 대표자`님에게 공문을 보냈어요.")
+            embed = discord.Embed(color=0x2C4BCE, title="<:ulsan:1183391095900602378> 전송 완료!", description=f"`{SaupName} 대표자`님에게 공문을 보냈어요.")
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
