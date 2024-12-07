@@ -536,7 +536,7 @@ class OneSaup(discord.ui.Modal, title="개별 파트너 공지"):
 
     async def on_submit(self, interaction: discord.Interaction):
         guild = interaction.guild
-        user_data = db.partner.find_one({"serverName": str(self.SaupNumber.value)})
+        user_data = await db.partner.find_one({"serverName": str(self.SaupNumber.value)})
 
         if user_data :
             DiscordId = user_data.get("playerId")
