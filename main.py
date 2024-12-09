@@ -83,7 +83,7 @@ async def on_guild_channel_create(channel):
     if isinstance(channel, discord.TextChannel) and channel.category_id == CATEGORY_ID:
         embed = discord.Embed(
             title="담당 매니저 배정을 기다리고 있어요 <:shmpyo_pitcle_to_text:1305068031151571014>",
-            description="### 상담 전, 안내사항 📃\n\n> - 배정되는 동안 안내해드린 양식을 미리 작성해 주시면, 보다 빠르게 상담을 진행할 수 있어요.\n> - 상담이 시작되면, 담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
+            description="### 상담 전, 안내사항 📃\n\n> - 상담이 시작될 경우, [쉼표샵 개인정보 처리방침](https://docs.google.com/document/d/1wai_MS0QWJxW-q_2_JOEFHYHySAHQpqjzgmlVAoKo74/edit?usp=sharing)에 동의하신 것으로 간주돼요.\n> - 상담이 시작되면, 담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록돼요.",
             color=0x2c4bce
         )
         message_to_channel = await channel.send(embed=embed)
@@ -166,7 +166,7 @@ async def on_message(msg):
 
                             embed = discord.Embed(
                                 title="상담이 시작되었습니다 <:shmpyo_pitcle_to_text:1305068031151571014>",
-                                description=f"### 담당 매니저 : <:shmpyo:1305069679722893372> {userName.get('playerName')} <:shmpyo_pitcle_to_text:1305068031151571014>\n담당 매니저에게 폭언, 욕설 등은 삼가해주세요.\n담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
+                                description=f"### 담당 매니저 : <:shmpyo:1305069679722893372> {userName.get('playerName')}\n담당 매니저에게 폭언, 욕설 등은 삼가해주세요.\n담당 매니저 보호와 행정 서비스 품질 향상을 위해 상담 내용은 모두 기록됩니다.",
                                 color=0x2c4bce
                             )
                             new_message = await msg.channel.send(embed=embed)
@@ -176,6 +176,24 @@ async def on_message(msg):
                                 {"message_id": message_id},
                                 {"$set": {"manager": member.id, "message_id": new_message.id}}
                             )
+                            if member.id != bot.user.id:  # 봇 자신에게 DM을 보내지 않도록
+                                try:
+                                    # DM 채널이 없다면 생성
+                                    if not member.dm_channel:
+                                        await member.create_dm()
+                            
+                                    # DM 전송
+                                    seembed = discord.Embed(
+                                        title="<:price:1293595552507760730> 담당 매니저가 배정되었어요.",
+                                        description=f"문의 티켓으로 이동하여 상담을 진행해 주세요.\n문의 티켓으로 이동하기 => <#{msg.channel.id}>",
+                                        color=0x2c4bce
+                                    )
+                                    await member.dm_channel.send(embed=seembed)
+                                except discord.Forbidden:
+                                    pass  # DM이 비활성화된 경우 무시
+                                except discord.errors.HTTPException as e:
+                                    # 추가적인 예외 처리
+                                    print(f"Failed to send DM to {member.name}: {e}")
                     except discord.NotFound:
                         await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=2)
             else:
