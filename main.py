@@ -111,7 +111,7 @@ async def on_guild_channel_create(channel):
 
                         # DM 전송
                         seembed = discord.Embed(
-                            title="<:price:1293595552507760730> 문의 티켓이 열렸어요",
+                            title="문의 티켓이 열렸어요 <:shmpyo_pitcle_to_text:1305068031151571014>",
                             description=f"문의 티켓으로 이동하여 상담을 진행해 주세요.\n<#{channel.id}>",
                             color=0x2c4bce
                         )
@@ -176,24 +176,6 @@ async def on_message(msg):
                                 {"message_id": message_id},
                                 {"$set": {"manager": member.id, "message_id": new_message.id}}
                             )
-                            if member.id != bot.user.id:  # 봇 자신에게 DM을 보내지 않도록
-                                try:
-                                    # DM 채널이 없다면 생성
-                                    if not member.dm_channel:
-                                        await member.create_dm()
-                            
-                                    # DM 전송
-                                    seembed = discord.Embed(
-                                        title="<:price:1293595552507760730> 담당 매니저가 배정되었어요.",
-                                        description=f"문의 티켓으로 이동하여 상담을 진행해 주세요.\n문의 티켓으로 이동하기 => <#{msg.channel.id}>",
-                                        color=0x2c4bce
-                                    )
-                                    await member.dm_channel.send(embed=seembed)
-                                except discord.Forbidden:
-                                    pass  # DM이 비활성화된 경우 무시
-                                except discord.errors.HTTPException as e:
-                                    # 추가적인 예외 처리
-                                    print(f"Failed to send DM to {member.name}: {e}")
                     except discord.NotFound:
                         await msg.channel.send("이전 메시지를 찾을 수 없습니다.", delete_after=2)
             else:
