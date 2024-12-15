@@ -666,13 +666,13 @@ async def password(interaction: discord.Interaction):
     REQUIRED_ROLE_ID = 1300023197353246771
     user_roles = [role.id for role in interaction.user.roles]
     if REQUIRED_ROLE_ID in user_roles:
-        viewww = SelectAdmin()
+        viewww = selectTeam()
         await interaction.response.send_message("선택사항을 선택하세요", view=viewww, ephemeral=True)
     else:
         embed = discord.Embed(color=0xC47A31, title="🚨 오류가 발생했어요", description=f"해당 명령어는 쉼표샵 매니저만 이용할 수 있어요.")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-class SelectAdmin(View):
+class selectTeam(View):
     @discord.ui.select(
         placeholder="선택사항 선택",
         options=[
