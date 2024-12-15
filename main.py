@@ -720,7 +720,7 @@ class sd_verify(discord.ui.Modal, title="인증번호 보내기"):
         webCode = self.create_12_code()
 
         for member in guild.members:
-            unt = discord.utils.get(guild.roles, id=1183035373174140928)
+            unt = discord.utils.get(guild.roles, id=1300023197353246771)
             if member.bot or unt not in member.roles:
                 continue
 
