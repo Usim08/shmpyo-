@@ -1,5 +1,5 @@
-from typing import Any
 import os
+from typing import Any
 import discord
 import pymongo
 from discord.ext import commands
@@ -8,6 +8,14 @@ import asyncio
 import motor.motor_asyncio
 from roblox import Client
 from roblox import AvatarThumbnailType  # AvatarThumbnailType을 임포트
+import json
+import time
+import uuid
+import hmac
+import hashlib
+import requests
+import datetime
+import random
 
 
 intents = discord.Intents.default()
