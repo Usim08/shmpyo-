@@ -719,32 +719,28 @@ class sd_verify(discord.ui.Modal, title="인증번호 보내기"):
         verification_code = self.generate_verification_code()
         webCode = self.create_12_code()
 
-        for member in guild.members:
-            unt = discord.utils.get(guild.roles, id=1300023197353246771)
-            if member.bot or unt not in member.roles:
-                continue
 
-            variables = {
-                '#{이름}': self.userName.value,
-                '#{인증번호}': verification_code
-            }
-            self.send_verify_number(self.phoneNumber.value, variables)
+        variables = {
+            '#{이름}': self.userName.value,
+            '#{인증번호}': verification_code
+        }
+        self.send_verify_number(self.phoneNumber.value, variables)
 
 
-            button = startWebVerify("인증 진행하기", webCode)
-            view = discord.ui.View()
-            view.add_item(button)
-            embed = discord.Embed(color=0x2c4bce, title="인증을 진행해 주세요 🛎️", description=f"{self.userName.value}님의 본인 확인을 위해 아래 버튼을 눌러 본인 인증을 진행해 주세요!")
-            await interaction.response.send_message(embed=embed, view=view)
+        button = startWebVerify("인증 진행하기", webCode)
+        view = discord.ui.View()
+        view.add_item(button)
+        embed = discord.Embed(color=0x2c4bce, title="인증을 진행해 주세요 🛎️", description=f"{self.userName.value}님의 본인 확인을 위해 아래 버튼을 눌러 본인 인증을 진행해 주세요!")
+        await interaction.response.send_message(embed=embed, view=view)
 
-            await db.discord_web_verify.insert_one({
-                "userName": self.userName.value,
-                "verifyCode": verification_code,
-                "managerId": str(interaction.user.id),
-                "webCode": webCode,
-                "channelId": str(interaction.channel.id),
-                "value":False
-            })
+        await db.discord_web_verify.insert_one({
+            "userName": self.userName.value,
+            "verifyCode": verification_code,
+            "managerId": str(interaction.user.id),
+            "webCode": webCode,
+            "channelId": str(interaction.channel.id),
+            "value":False
+        })
     
     def send_verify_number(self, phone_number, variables, additional_param=None):
         api_key = 'NCSXGE8BBCEZMTS7'
