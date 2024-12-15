@@ -820,6 +820,8 @@ async def web_verify_discord_dm():
                                             description=f"{userName}님의 인증이 완료됐어요. 문의티켓으로 돌아가 상담을 진행해 주세요.\n## <#{channel}>"
                                         )
                                         await member.send(embed=embed)
+                                        
+                                        db.trash_data.delete_one({"managerId": manager})
                                     except discord.Forbidden:
                                         print(f"DM 전송 실패")
                                 except Exception as e:
