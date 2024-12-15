@@ -33,6 +33,7 @@ async def on_ready():
 
     # MongoDB Change Stream 설정
     asyncio.create_task(monitor_db_changes())
+    asyncio.create_task(web_verify_discord_dm())
 
 
 @bot.event
@@ -656,6 +657,180 @@ class add_partner(discord.ui.Modal, title="파트너 서버 등록하기"):
                 description="서버장님에게 디엠 보내기를 실패했어요."
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+
+@bot.tree.command(name="쉼표크루", description="해당 명령어는 쉼표크루만 이용할 수 있어요")
+async def password(interaction: discord.Interaction):
+
+    REQUIRED_ROLE_ID = 1300023197353246771
+    user_roles = [role.id for role in interaction.user.roles]
+    if REQUIRED_ROLE_ID in user_roles:
+        viewww = SelectAdmin()
+        await interaction.response.send_message("선택사항을 선택하세요", view=viewww, ephemeral=True)
+    else:
+        embed = discord.Embed(color=0xC47A31, title="🚨 오류가 발생했어요", description=f"해당 명령어는 쉼표샵 매니저만 이용할 수 있어요.")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+class SelectAdmin(View):
+    @discord.ui.select(
+        placeholder="선택사항 선택",
+        options=[
+            discord.SelectOption(
+                label="인증번호",
+                value='1',
+                description="유저 정보 확인을 위해 인증번호를 보냅니다",
+                emoji="🔑"
+            )
+        ]
+    )
+
+    async def select_callback(self, interaction, select):
+        select.disabled = True
+
+        if select.values[0] == '1':
+            await interaction.response.send_modal(sd_verify())
+
+
+
+
+
+class sd_verify(discord.ui.Modal, title="인증번호 보내기"):
+    userName = discord.ui.TextInput(label="이름(본명)을 입력하세요", required=True, style=discord.TextStyle.short)
+    phoneNumber = discord.ui.TextInput(label="전화번호를 입력하세요", required=True, style=discord.TextStyle.short)
+
+    def generate_verification_code(self):
+        return str(random.randint(100000, 999999))
+
+    def create_12_code(self):
+        return str(random.randint(100000000000, 999999999999))
+    
+
+    async def on_submit(self, interaction: discord.Interaction):
+        guild = interaction.guild
+        verification_code = self.generate_verification_code()
+        webCode = self.create_12_code()
+
+        for member in guild.members:
+            unt = discord.utils.get(guild.roles, id=1183035373174140928)
+            if member.bot or unt not in member.roles:
+                continue
+
+            variables = {
+                '#{이름}': self.userName.value,
+                '#{인증번호}': verification_code
+            }
+            self.send_verify_number(self.phoneNumber.value, variables)
+
+
+            button = startWebVerify("인증 진행하기", webCode)
+            view = discord.ui.View()
+            view.add_item(button)
+            embed = discord.Embed(color=0x2c4bce, title="인증을 진행해 주세요 🛎️", description=f"{self.userName.value}님의 본인 확인을 위해 아래 버튼을 눌러 본인 인증을 진행해 주세요!")
+            msid = await interaction.response.send_message(embed=embed, view=view)
+
+            await db.discord_web_verify.insert_one({
+                "userName": self.userName.value,
+                "verifyCode": verification_code,
+                "managerId": str(interaction.user.id),
+                "webCode": webCode,
+                "channelId": str(interaction.channel.id),
+                "value":False
+            })
+    
+    def send_verify_number(self, phone_number, variables, additional_param=None):
+        api_key = 'NCSXGE8BBCEZMTS7'
+        api_secret = 'L7ZWWCTC7IA46F2VTPT6EHXBXDA73LMZ'
+
+        def unique_id():
+            return str(uuid.uuid1().hex)
+
+        def get_iso_datetime():
+            utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
+            utc_offset = datetime.timedelta(seconds=-utc_offset_sec)
+            return datetime.datetime.now().replace(tzinfo=datetime.timezone(offset=utc_offset)).isoformat()
+
+        def get_signature(key, msg):
+            return hmac.new(key.encode(), msg.encode(), hashlib.sha256).hexdigest()
+
+        def get_headers(api_key, api_secret):
+            date = get_iso_datetime()
+            salt = unique_id()
+            combined_string = date + salt
+            return {
+                'Authorization': 'HMAC-SHA256 ApiKey=' + api_key + ', Date=' + date + ', salt=' + salt + ', signature=' + get_signature(api_secret, combined_string),
+                'Content-Type': 'application/json; charset=utf-8'
+            }
+
+        def get_url(path):
+            return f'https://api.solapi.com{path}'
+
+        # 카카오톡 발송 데이터 구성
+        data = {
+            'messages': [
+                {
+                    'to': phone_number,
+                    'from': '01067754665',  # 발신번호
+                    'kakaoOptions': {
+                        'pfId': 'KA01PF241022150327686bCbW0aZDu0y',
+                        'templateId': 'KA01TP241026144808928N0zKLn26eca',
+                        'variables': variables
+                    }
+                }
+            ]
+        }
+
+        try:
+            # API 호출
+            response = requests.post(get_url('/messages/v4/send-many'), headers=get_headers(api_key, api_secret), json=data)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            return {'error': str(e)}
+        
+
+async def web_verify_discord_dm():
+    pipeline = [{'$match': {'operationType': 'insert'}}]
+    try:
+        async with db.trash_data.watch(pipeline) as stream:
+            async for change in stream:
+                if change.get('fullDocument'):
+                    print("테스트")
+                    userName = change['fullDocument'].get('userName')
+                    manager = change['fullDocument'].get('mannagerId')
+                    channel = change['fullDocument'].get('channelId')
+
+                    if userName and manager and channel:
+                        guild = bot.get_guild(1193811936673026129)  # 디스코드 서버 ID 입력
+                        if guild:
+ 
+
+                            member = guild.get_member(int(manager))
+
+                            if member:
+                                try:
+                                    try:
+                                        embed = discord.Embed(
+                                            color=0x2c4bce, 
+                                            title=f"{userName}님의 인증이 완료됐어요 🔔", 
+                                            description=f"{userName}님의 인증이 완료됐어요. 문의티켓으로 돌아가 상담을 진행해 주세요.\n## <#{channel}>"
+                                        )
+                                        await member.send(embed=embed)
+                                    except discord.Forbidden:
+                                        print(f"DM 전송 실패")
+                                except Exception as e:
+                                    print(f"로블록스에서 정보를 가져오는 중 오류가 발생했습니다: {str(e)}")
+                        else:
+                            print(f"디스코드 서버를 찾을 수 없습니다 - 서버 ID: 1170751784608858172")
+    except Exception as e:
+        print("전송 안됨")
+
+        
+        
+class startWebVerify(discord.ui.Button):
+    def __init__(self, label, web):
+        super().__init__(label=label, style=discord.ButtonStyle.gray, emoji="📑", url=f"https://www.shmpyoshop.com/verify/{web}")
+        self.web = web
 
 as_token = os.environ['BOT_TOKEN']
 bot.run(as_token)
