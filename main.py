@@ -735,7 +735,7 @@ class sd_verify(discord.ui.Modal, title="인증번호 보내기"):
             view = discord.ui.View()
             view.add_item(button)
             embed = discord.Embed(color=0x2c4bce, title="인증을 진행해 주세요 🛎️", description=f"{self.userName.value}님의 본인 확인을 위해 아래 버튼을 눌러 본인 인증을 진행해 주세요!")
-            msid = await interaction.response.send_message(embed=embed, view=view)
+            await interaction.response.send_message(embed=embed, view=view)
 
             await db.discord_web_verify.insert_one({
                 "userName": self.userName.value,
