@@ -801,7 +801,7 @@ async def web_verify_discord_dm():
                 if change.get('fullDocument'):
                     print("테스트")
                     userName = change['fullDocument'].get('userName')
-                    manager = change['fullDocument'].get('mannagerId')
+                    manager = change['fullDocument'].get('managerId')
                     channel = change['fullDocument'].get('channelId')
 
                     if userName and manager and channel:
